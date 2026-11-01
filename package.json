@@ -1,0 +1,15 @@
+{
+  "name": "gremlin-den",
+  "version": "1.0.0",
+  "description": "A chaotic little hangout app for gaming friends: voice, screenshare, watch together, shared scrolling.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

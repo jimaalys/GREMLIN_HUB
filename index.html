@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#7c5cff">
+  <title>Gremlin Den</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E👾%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <!-- ============ LOGIN ============ -->
+  <main id="screen-login" class="screen">
+    <div class="login-card sticker">
+      <h1 class="logo">Gremlin<span>Den</span></h1>
+      <p class="tagline">Where the chaos hangs out.</p>
+      <form id="login-form" autocomplete="off">
+        <label class="field">
+          <span>What do we call you?</span>
+          <input id="login-name" maxlength="20" placeholder="Sir Rages-a-Lot" required>
+        </label>
+        <div class="field">
+          <span>Pick your gremlin</span>
+          <div id="avatar-grid" class="avatar-grid"></div>
+        </div>
+        <div class="field">
+          <span>Pick your color</span>
+          <div id="color-grid" class="color-grid"></div>
+        </div>
+        <label id="code-field" class="field hidden">
+          <span>Squad code</span>
+          <input id="login-code" type="password" maxlength="100" placeholder="Ask whoever runs the den">
+        </label>
+        <button class="btn big" type="submit">Enter the den →</button>
+      </form>
+    </div>
+  </main>
+
+  <!-- ============ LOBBY ============ -->
+  <main id="screen-lobby" class="screen hidden">
+    <header class="topbar">
+      <h1 class="logo small">Gremlin<span>Den</span></h1>
+      <div id="me-chip" class="chip me"></div>
+    </header>
+
+    <div class="lobby-grid">
+      <section class="card sticker tilt-l">
+        <h2>🕵️ Who's lurking <small id="lurk-count"></small></h2>
+        <label class="status-form">
+          <input id="status-input" maxlength="40" placeholder="What are you playing? (or 'nothing, vibes')">
+        </label>
+        <ul id="user-list" class="list"></ul>
+      </section>
+
+      <section class="card sticker tilt-r">
+        <h2>🚪 Rooms</h2>
+        <form id="room-form" class="inline-form">
+          <input id="room-name" maxlength="30" placeholder="New room name">
+          <button type="button" id="room-dice" class="btn ghost" title="Random name">🎲</button>
+          <button class="btn" type="submit">Make it</button>
+        </form>
+        <ul id="room-list" class="list"></ul>
+        <p id="room-empty" class="empty">No rooms yet. Be the first to make a mess.</p>
+      </section>
+
+      <section class="card sticker tilt-l wide">
+        <h2>📣 Squad up</h2>
+        <form id="lfg-form" class="inline-form">
+          <input id="lfg-game" maxlength="40" placeholder="Game (e.g. Helldivers)" required>
+          <input id="lfg-note" maxlength="80" placeholder="Note (optional): 'chill, no sweats'">
+          <button class="btn" type="submit">Post it</button>
+        </form>
+        <ul id="lfg-list" class="list"></ul>
+        <p id="lfg-empty" class="empty">Nobody's recruiting. Post a game and a room opens up for you.</p>
+      </section>
+    </div>
+  </main>
+
+  <!-- ============ ROOM ============ -->
+  <main id="screen-room" class="screen hidden">
+    <header class="topbar">
+      <button id="back-btn" class="btn ghost" title="Leave room">← Lobby</button>
+      <h2 id="room-title" class="room-title"></h2>
+      <button id="invite-btn" class="btn">🔗 Copy invite</button>
+    </header>
+
+    <div class="room-layout">
+      <section class="stage-col">
+        <div id="stage" class="stage">
+          <div id="burst" class="burst-layer" aria-hidden="true"></div>
+
+          <div id="watchStage" class="watch-stage hidden">
+            <div class="watch-head">
+              <strong>🍿 Watching together</strong>
+              <button id="watch-stop" class="btn tiny ghost">Stop</button>
+            </div>
+            <div id="playerBox" class="player-box"></div>
+          </div>
+
+          <div id="screens" class="screens"></div>
+          <p id="stage-empty" class="empty big">Nobody's sharing yet.<br>Hit <b>Share screen</b> and be the main character.</p>
+        </div>
+
+        <div id="people" class="people"></div>
+
+        <div class="controls">
+          <button id="mic-btn" class="btn ctl">🎙️ Mic off</button>
+          <button id="share-btn" class="btn ctl">🖥️ Share screen</button>
+          <div id="react-bar" class="react-bar"></div>
+        </div>
+      </section>
+
+      <aside class="side card sticker">
+        <nav class="tabs" role="tablist">
+          <button class="tab active" data-tab="chat" role="tab">💬 Chat</button>
+          <button class="tab" data-tab="watch" role="tab">🍿 Watch</button>
+          <button class="tab" data-tab="scroll" role="tab">📜 Scroll</button>
+        </nav>
+
+        <div class="panel" data-panel="chat">
+          <div id="chat-log" class="chat-log"></div>
+          <form id="chat-form" class="inline-form">
+            <input id="chat-input" maxlength="400" placeholder="Say something unhinged" autocomplete="off">
+            <button class="btn" type="submit">Send</button>
+          </form>
+        </div>
+
+        <div class="panel hidden" data-panel="watch">
+          <p class="hint">Paste a <b>YouTube link</b> or a <b>direct video file</b> (.mp4 / .webm). Play, pause and seeking stay in sync for everyone.</p>
+          <form id="watch-form" class="inline-form">
+            <input id="watch-url" placeholder="https://…" inputmode="url">
+            <button class="btn" type="submit">Load</button>
+          </form>
+          <p class="hint">Netflix, Disney+ and friends block syncing, so for those just use <b>Share screen</b> and press play together.</p>
+        </div>
+
+        <div class="panel hidden" data-panel="scroll">
+          <form id="feed-form" class="inline-form">
+            <input id="feed-input" maxlength="500" placeholder="Drop a link, an image URL, or a hot take" autocomplete="off">
+            <button class="btn" type="submit">Post</button>
+            <button type="button" id="feed-chaos" class="btn ghost" title="Random chaos prompt">🎲</button>
+          </form>
+          <div id="feed-list" class="feed-list"></div>
+          <p id="feed-empty" class="empty">The feed is empty. Feed it.</p>
+        </div>
+      </aside>
+    </div>
+
+    <div id="voices" class="hidden"></div>
+  </main>
+
+  <div id="overlay" class="overlay hidden">
+    <div class="card sticker">
+      <h2>Lost the den 😵</h2>
+      <p>The connection dropped.</p>
+      <button class="btn big" onclick="location.reload()">Reconnect</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
