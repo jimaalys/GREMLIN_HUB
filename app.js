@@ -180,7 +180,7 @@ function renderLobby() {
       el('div', { class: 'name', text: `#${r.name}` }),
       el('div', { class: 'sub', text: `${r.count} in here` })
     ),
-    el('span', { class: 'faces' }, r.members.slice(0, 5).map((m) => el('span', { class: 'bubble', text: m.avatar, title: m.name }))),
+    el('span', { class: 'faces' }, r.members.slice(0, 5).map((m) => bubble(m))),
     r.watching ? el('span', { class: 'badge', text: '🍿 watching' }) : null,
     el('button', { class: 'btn tiny', text: 'Join', onclick: () => tx({ t: 'join', room: r.name }) })
   )));
@@ -277,10 +277,10 @@ function updateStageEmpty() {
 
 function updateControls() {
   const mic = $('#mic-btn');
-  mic.textContent = S.micOn ? '🎙️ Mic on' : '🎙️ Mic off';
+  $('span', mic).textContent = S.micOn ? 'Mic on' : 'Mic off';
   mic.classList.toggle('on', S.micOn);
   const sh = $('#share-btn');
-  sh.textContent = S.screen ? '⏹️ Stop sharing' : '🖥️ Share screen';
+  $('span', sh).textContent = S.screen ? 'Stop sharing' : 'Share screen';
   sh.classList.toggle('live', !!S.screen);
 }
 
@@ -300,7 +300,7 @@ function addChat(m) {
   const stick = log.scrollTop + log.clientHeight >= log.scrollHeight - 40;
   log.append(el('div', { class: `msg ${mine ? 'mine' : ''}` },
     bubble(m),
-    el('div', { class: 'body' }, el('div', { class: 'who', text: mine ? 'You' : m.name }), el('div', { class: 'txt', text: m.text }))
+    el('div', { class: 'body' }, el('div', { class: 'who' }, el('span', { text: mine ? 'You' : m.name }), el('time', { text: new Date(m.ts || Date.now()).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) })), el('div', { class: 'txt', text: m.text }))
   ));
   if (stick || mine) log.scrollTop = log.scrollHeight;
   if (!mine && S.activeTab !== 'chat') ping('chat');
@@ -727,6 +727,47 @@ function wireRoom() {
   $('#feed-chaos').addEventListener('click', () => tx({ t: 'feed-prompt' }));
 }
 
+// =====================================================================
+// APP SHELL: bottom nav, installable app
+// =====================================================================
+function wireNav() {
+  for (const b of $$('.nav-btn')) {
+    b.addEventListener('click', () => {
+      $('#screen-lobby').dataset.view = b.dataset.view;
+      $$('.nav-btn').forEach((x) => x.classList.toggle('active', x === b));
+      window.scrollTo(0, 0);
+    });
+  }
+}
+
+let installEvent = null;
+function wireInstall() {
+  const standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  if (standalone) return;
+  const btns = [$('#install-btn'), $('#install-btn-login')];
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    installEvent = e;
+    btns.forEach((b) => b.classList.remove('hidden'));
+  });
+  window.addEventListener('appinstalled', () => { installEvent = null; btns.forEach((b) => b.classList.add('hidden')); toast('Installed. Find Gremlin Den on your home screen.'); });
+  for (const b of btns) {
+    b.addEventListener('click', async () => {
+      if (!installEvent) return;
+      installEvent.prompt();
+      await installEvent.userChoice.catch(() => {});
+      installEvent = null;
+      btns.forEach((x) => x.classList.add('hidden'));
+    });
+  }
+  // iPhones never fire the install event, so show how to do it by hand.
+  if (/iphone|ipad|ipod/i.test(navigator.userAgent)) $('#ios-hint').classList.remove('hidden');
+}
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(() => {}); });
+}
+
 async function init() {
   try {
     const res = await fetch('/config');
@@ -736,5 +777,7 @@ async function init() {
   buildLogin();
   buildLobby();
   wireRoom();
+  wireNav();
+  wireInstall();
 }
 init();

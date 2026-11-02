@@ -23,10 +23,14 @@ if (process.env.TURN_URL) {
 }
 
 // Everything lives in one flat folder, so only these files are ever served.
-const STATIC_FILES = new Set(['index.html', 'style.css', 'app.js']);
+const STATIC_FILES = new Set([
+  'index.html', 'style.css', 'app.js', 'sw.js', 'manifest.webmanifest', 'icon.svg',
+  'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'apple-touch-icon.png'
+]);
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
-  '.css': 'text/css; charset=utf-8'
+  '.css': 'text/css; charset=utf-8', '.webmanifest': 'application/manifest+json',
+  '.svg': 'image/svg+xml', '.png': 'image/png'
 };
 
 // Minimal static file server (no framework needed).
@@ -47,7 +51,7 @@ const server = http.createServer((req, res) => {
   const file = path.join(__dirname, name);
   fs.readFile(file, (err, data) => {
     if (err) { res.writeHead(404); return res.end('Not found'); }
-    res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-cache' });
+    res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-cache', ...(name === 'sw.js' ? { 'Service-Worker-Allowed': '/' } : {}) });
     res.end(data);
   });
 });
@@ -108,7 +112,7 @@ function lobbyState() {
     rooms: [...rooms.values()].map((r) => ({
       name: r.name,
       count: r.members.size,
-      members: [...r.members].map((id) => users.get(id)).filter(Boolean).map((u) => ({ avatar: u.avatar, name: u.name })),
+      members: [...r.members].map((id) => users.get(id)).filter(Boolean).map((u) => ({ avatar: u.avatar, name: u.name, color: u.color })),
       watching: !!r.watch.url
     })),
     lfg
