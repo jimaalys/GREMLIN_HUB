@@ -5,21 +5,34 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const { WebSocketServer } = require('ws');
 
 const PORT = process.env.PORT || 3000;
 const ACCESS_CODE = (process.env.ACCESS_CODE || '').trim(); // optional "squad code"
 const MAX_ROOM_SIZE = 8; // screenshare mesh gets heavy past this
 
-// STUN is enough for most home networks. If some friends can't connect
-// (strict NATs, school/work Wi-Fi), add a TURN relay via env vars.
-const ICE_SERVERS = [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }];
-if (process.env.TURN_URL) {
-  ICE_SERVERS.push({
-    urls: process.env.TURN_URL.split(',').map((s) => s.trim()),
-    username: process.env.TURN_USER || '',
-    credential: process.env.TURN_PASS || ''
-  });
+// STUN servers are public, so they are safe to hand to anyone.
+// TURN (relay) costs money, so it is never sent to anonymous visitors and never uses a permanent password.
+// Relay is enabled only when BOTH of these are set:
+//   TURN_URL     comma-separated turn:/turns: addresses of your coturn server
+//   TURN_SECRET  coturn's `static-auth-secret`. It stays on this server; clients only ever
+//                receive short-lived credentials derived from it.
+// If either is missing, everyone gets STUN only (direct connections, no relay).
+const STUN_SERVERS = [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }];
+const TURN_URLS = (process.env.TURN_URL || '').split(',').map((s) => s.trim()).filter(Boolean);
+const TURN_SECRET = process.env.TURN_SECRET || '';
+const TURN_TTL = Number(process.env.TURN_TTL) > 0 ? Number(process.env.TURN_TTL) : 12 * 60 * 60; // seconds a credential stays valid
+
+// Built per connected user, only after the squad code has been checked.
+function iceServersFor(user) {
+  const servers = [...STUN_SERVERS];
+  if (!TURN_URLS.length || !TURN_SECRET) return servers;
+  // coturn "TURN REST API" scheme: username = expiry:id, credential = base64(HMAC-SHA1(secret, username))
+  const username = `${Math.floor(Date.now() / 1000) + TURN_TTL}:${user.id}`;
+  const credential = crypto.createHmac('sha1', TURN_SECRET).update(username).digest('base64');
+  servers.push({ urls: TURN_URLS, username, credential });
+  return servers;
 }
 
 // Everything lives in one flat folder, so only these files are ever served.
@@ -44,7 +57,7 @@ const server = http.createServer((req, res) => {
   if (pathname === '/healthz') { res.writeHead(200); return res.end('ok'); }
   if (pathname === '/config') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify({ needsCode: !!ACCESS_CODE, ice: ICE_SERVERS }));
+    return res.end(JSON.stringify({ needsCode: !!ACCESS_CODE })); // nothing secret: this is served before login
   }
   const name = pathname === '/' ? 'index.html' : pathname.slice(1);
   if (!STATIC_FILES.has(name)) { res.writeHead(404); return res.end('Not found'); }
@@ -149,7 +162,7 @@ function joinRoom(user, rawName) {
   const peers = [...room.members].map((id) => users.get(id)).filter(Boolean).map(pub);
   room.members.add(user.id);
   user.room = name;
-  send(user.ws, { t: 'joined', room: name, peers, watch: watchNow(room), feed: room.feed });
+  send(user.ws, { t: 'joined', room: name, peers, watch: watchNow(room), feed: room.feed, ice: iceServersFor(user) });
   sendToRoom(room, { t: 'peer-join', user: pub(user) }, user.id);
 }
 
@@ -199,7 +212,7 @@ wss.on('connection', (ws) => {
       const color = /^#[0-9a-f]{6}$/i.test(m.color || '') ? m.color : '#ff4fa3';
       user = { id: nextUserId++, ws, name, avatar: clean(m.avatar, 8) || '👾', color, playing: '', room: null };
       users.set(user.id, user);
-      send(ws, { t: 'welcome', id: user.id });
+      send(ws, { t: 'welcome', id: user.id, ice: iceServersFor(user) });
       broadcastLobby();
       return;
     }
