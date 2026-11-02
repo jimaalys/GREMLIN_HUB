@@ -54,7 +54,20 @@ function toast(text) {
   toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
 }
 const tx = (m) => { if (S.ws && S.ws.readyState === 1) S.ws.send(JSON.stringify(m)); };
-const bubble = (u, extra = '') => el('span', { class: `bubble ${extra}`, style: `background:${/^#[0-9a-f]{6}$/i.test(u.color) ? u.color : '#fff'}`, text: u.avatar });
+// Profile pictures are only ever shown from VYRA's own public "avatars" folder, and only for a path that matches the
+// exact {account-id}/profile.webp?v=number shape the server sends. Anything else falls back to the emoji.
+const IMG_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/profile\.webp\?v=\d{1,15}$/;
+function bubble(u, extra = '') {
+  const n = el('span', { class: `bubble ${extra}`, style: `background:${/^#[0-9a-f]{6}$/i.test(u.color) ? u.color : '#fff'}` });
+  if (u.img && S.config.supabaseUrl && IMG_RE.test(u.img)) {
+    const img = el('img', { src: `${S.config.supabaseUrl}/storage/v1/object/public/avatars/${u.img}`, alt: '', decoding: 'async', referrerpolicy: 'no-referrer', draggable: 'false' });
+    img.addEventListener('error', () => { n.classList.remove('has-img'); n.textContent = u.avatar; });
+    n.classList.add('has-img');
+    n.append(img);
+  } else n.textContent = u.avatar;
+  return n;
+}
+const guestTag = (u) => (u && u.guest ? el('small', { class: 'guest-tag', text: 'guest' }) : null);
 
 // =====================================================================
 // LOGIN
@@ -90,12 +103,15 @@ function buildLogin() {
 // =====================================================================
 // SOCKET
 // =====================================================================
-function connect(code) {
+// `token` is set for signed-in accounts (the server then takes name, picture and color from the account, not from here).
+function connect(code, token) {
   S.denied = false;
   const proto = location.protocol === 'https:' ? 'wss' : 'ws';
   const ws = new WebSocket(`${proto}://${location.host}`);
   S.ws = ws;
-  ws.onopen = () => ws.send(JSON.stringify({ t: 'hello', name: profile.name, avatar: profile.avatar, color: profile.color, code }));
+  ws.onopen = () => ws.send(JSON.stringify(token
+    ? { t: 'hello', token, code }
+    : { t: 'hello', name: profile.name, avatar: profile.avatar, color: profile.color, code }));
   ws.onmessage = (e) => {
     let m;
     try { m = JSON.parse(e.data); } catch { return; }
@@ -112,7 +128,8 @@ function handle(m) {
   switch (m.t) {
     case 'welcome':
       if (m.ice) S.config.ice = m.ice;
-      S.me = { id: m.id, ...profile };
+      S.me = { id: m.id, ...(m.me || profile) }; // accounts: the server's verified copy; guests: what they typed
+      S.account = !!m.account;
       renderMe();
       show('lobby');
       { const saved = store.get('gremlin-status'); if (saved) tx({ t: 'status', playing: saved }); }
@@ -121,6 +138,24 @@ function handle(m) {
     case 'denied':
       S.denied = true;
       toast('That squad code is not right.');
+      break;
+    case 'auth-failed':
+      S.denied = true; // the server closes this connection; do not show "lost connection"
+      if (window.Account) Account.onAuthFailed(m.reason); else toast('Could not sign in.');
+      break;
+    case 'replaced':
+      S.denied = true;
+      $('#overlay h2').textContent = 'VYRA is open somewhere else';
+      $('#overlay p').textContent = 'This account signed in on another tab or device.';
+      $('#overlay').classList.remove('hidden');
+      teardownMedia();
+      break;
+    case 'me':
+      S.me = { ...S.me, ...m.me };
+      renderMe();
+      break;
+    case 'peer-update':
+      if (S.roomUsers.has(m.user.id)) { S.roomUsers.set(m.user.id, m.user); renderPeople(); }
       break;
     case 'error': toast(m.message); break;
     case 'lobby':
@@ -163,7 +198,10 @@ function handle(m) {
 // =====================================================================
 function renderMe() {
   const chip = $('#me-chip');
-  chip.replaceChildren(bubble(S.me), el('span', { text: S.me.name }));
+  chip.replaceChildren(bubble(S.me), el('span', { text: S.me.name }), guestTag(S.me));
+  chip.classList.toggle('clickable', !!window.Account && !!S.config.auth);
+  chip.setAttribute('role', S.config.auth ? 'button' : 'text');
+  if (S.config.auth) chip.tabIndex = 0;
 }
 
 function renderLobby() {
@@ -171,7 +209,7 @@ function renderLobby() {
   $('#user-list').replaceChildren(...S.users.map((u) => el('li', { class: 'row' },
     bubble(u),
     el('div', { class: 'grow' },
-      el('div', { class: 'name', text: u.name + (S.me && u.id === S.me.id ? ' (you)' : '') }),
+      el('div', { class: 'name' }, u.name + (S.me && u.id === S.me.id ? ' (you)' : ''), guestTag(u), u.mode === 'idle' ? el('small', { class: 'mode idle', text: 'idle' }) : null, u.mode === 'dnd' ? el('small', { class: 'mode dnd', text: 'do not disturb' }) : null),
       el('div', { class: 'sub', text: u.room ? `in #${u.room}` : (u.playing ? `playing ${u.playing}` : 'just vibing') }),
     ),
     u.playing && u.room ? el('span', { class: 'badge', text: u.playing }) : null
@@ -190,9 +228,9 @@ function renderLobby() {
 
   $('#lfg-empty').classList.toggle('hidden', S.lfg.length > 0);
   $('#lfg-list').replaceChildren(...[...S.lfg].reverse().map((p) => el('li', { class: 'row' },
-    el('span', { class: 'bubble', text: p.avatar }),
+    bubble(p),
     el('div', { class: 'grow' },
-      el('div', { class: 'name', text: `${p.name} wants to play ${p.game}` }),
+      el('div', { class: 'name' }, `${p.name} wants to play ${p.game}`, guestTag(p)),
       el('div', { class: 'sub', text: p.note || 'no notes, just vibes' })
     ),
     el('button', { class: 'btn tiny', text: 'Hop in', onclick: () => tx({ t: 'join', room: p.room }) })
@@ -268,7 +306,7 @@ function teardownMedia() {
 
 function renderPeople() {
   $('#people').replaceChildren(...[...S.roomUsers.values()].map((u) => {
-    const chip = el('div', { class: 'chip', 'data-uid': u.id }, bubble(u), el('span', { text: u.name + (u.id === S.me.id ? ' (you)' : '') }));
+    const chip = el('div', { class: 'chip', 'data-uid': u.id }, bubble(u), el('span', { text: u.name + (u.id === S.me.id ? ' (you)' : '') }), guestTag(u));
     return chip;
   }));
 }
@@ -304,7 +342,7 @@ function addChat(m) {
   const stick = log.scrollTop + log.clientHeight >= log.scrollHeight - 40;
   log.append(el('div', { class: `msg ${mine ? 'mine' : ''}` },
     bubble(m),
-    el('div', { class: 'body' }, el('div', { class: 'who' }, el('span', { text: mine ? 'You' : m.name }), el('time', { text: new Date(m.ts || Date.now()).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) })), el('div', { class: 'txt', text: m.text }))
+    el('div', { class: 'body' }, el('div', { class: 'who' }, el('span', { text: mine ? 'You' : m.name }), mine ? null : guestTag(m), el('time', { text: new Date(m.ts || Date.now()).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) })), el('div', { class: 'txt', text: m.text }))
   ));
   if (stick || mine) log.scrollTop = log.scrollHeight;
   if (!mine && S.activeTab !== 'chat') ping('chat');
@@ -777,6 +815,8 @@ async function init() {
     const res = await fetch('/config');
     const cfg = await res.json();
     S.config.needsCode = !!cfg.needsCode; // ICE servers arrive over the socket after login
+    // Accounts are optional: these public values exist only when the server has Supabase turned on.
+    if (cfg.auth && cfg.supabaseUrl && cfg.supabaseKey) Object.assign(S.config, { auth: true, guests: cfg.guests !== false, supabaseUrl: cfg.supabaseUrl, supabaseKey: cfg.supabaseKey });
   } catch { /* defaults are fine */ }
   $('#code-field').classList.toggle('hidden', !S.config.needsCode);
   buildLogin();
@@ -784,5 +824,7 @@ async function init() {
   wireRoom();
   wireNav();
   wireInstall();
+  if (S.config.auth && window.Account) Account.start(); // otherwise the original guest welcome screen stays up
 }
-init();
+// Wait until every script (auth.js, account.js) has loaded.
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();

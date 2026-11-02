@@ -57,6 +57,168 @@
     </div>
   </main>
 
+  <!-- ============ ACCOUNTS (shown only when the server has Supabase turned on) ============ -->
+  <main id="screen-start" class="screen auth-screen hidden">
+    <div class="login-card glass auth-card">
+      <img class="login-mascot" src="/icon-512.png" alt="The Wanderer, VYRA's hooded mascot with glowing lime eyes" width="230" height="230" decoding="async">
+      <h1 class="logo" aria-label="VYRA">VYRA</h1>
+      <p class="tagline">Find Your Somewhere.</p>
+      <div class="auth-actions">
+        <button id="start-signin" class="btn primary big" type="button">Sign in</button>
+        <button id="start-signup" class="btn big" type="button">Create account</button>
+        <button id="start-guest" class="link-btn" type="button">Continue as guest</button>
+      </div>
+      <p class="hint center">Accounts keep your name, avatar and picture on every device.</p>
+    </div>
+  </main>
+
+  <main id="screen-signin" class="screen auth-screen hidden">
+    <div class="login-card glass auth-card">
+      <div class="auth-head"><img src="/icon-192.png" alt="" width="56" height="56"><h1 class="logo small" aria-label="VYRA">VYRA</h1></div>
+      <h2 class="auth-title">Sign in</h2>
+      <form id="signin-form" novalidate>
+        <label class="field"><span>Email</span><input id="signin-email" type="email" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" maxlength="254" required></label>
+        <label class="field"><span>Password</span><input id="signin-pass" type="password" autocomplete="current-password" maxlength="200" required></label>
+        <p id="signin-msg" class="form-msg" role="alert"></p>
+        <button class="btn primary big" type="submit">Sign in</button>
+      </form>
+      <div class="auth-links">
+        <button id="signin-forgot" class="link-btn" type="button">Forgot password?</button>
+        <button id="signin-signup" class="link-btn" type="button">Create account</button>
+      </div>
+      <button class="link-btn back-btn" type="button" data-go="start">Back</button>
+    </div>
+  </main>
+
+  <main id="screen-signup" class="screen auth-screen hidden">
+    <div class="login-card glass auth-card">
+      <div class="auth-head"><img src="/icon-192.png" alt="" width="56" height="56"><h1 class="logo small" aria-label="VYRA">VYRA</h1></div>
+      <h2 class="auth-title">Create your account</h2>
+      <form id="signup-form" novalidate>
+        <label class="field"><span>Email</span><input id="signup-email" type="email" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" maxlength="254" required></label>
+        <label class="field"><span>Password</span><input id="signup-pass" type="password" autocomplete="new-password" minlength="10" maxlength="200" required>
+          <small class="hint">At least 10 characters. Your email is private and never shown to other people.</small></label>
+        <p id="signup-msg" class="form-msg" role="alert"></p>
+        <button class="btn primary big" type="submit">Create account</button>
+      </form>
+      <div class="auth-links"><button id="signup-signin" class="link-btn" type="button">I already have an account</button></div>
+      <button class="link-btn back-btn" type="button" data-go="start">Back</button>
+    </div>
+  </main>
+
+  <main id="screen-check" class="screen auth-screen hidden">
+    <div class="login-card glass auth-card">
+      <div class="auth-head"><img src="/icon-192.png" alt="" width="56" height="56"><h1 class="logo small" aria-label="VYRA">VYRA</h1></div>
+      <h2 class="auth-title">Check your email 📬</h2>
+      <p id="check-text" class="auth-note">We sent a link. Open it on this phone to finish. It can take a minute, and it may land in spam.</p>
+      <p id="check-msg" class="form-msg" role="status"></p>
+      <button id="check-resend" class="btn big" type="button">Send it again</button>
+      <button class="link-btn back-btn" type="button" data-go="signin">Back to sign in</button>
+    </div>
+  </main>
+
+  <main id="screen-forgot" class="screen auth-screen hidden">
+    <div class="login-card glass auth-card">
+      <div class="auth-head"><img src="/icon-192.png" alt="" width="56" height="56"><h1 class="logo small" aria-label="VYRA">VYRA</h1></div>
+      <h2 class="auth-title">Reset your password</h2>
+      <form id="forgot-form" novalidate>
+        <label class="field"><span>Email</span><input id="forgot-email" type="email" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" maxlength="254" required></label>
+        <p id="forgot-msg" class="form-msg" role="status"></p>
+        <button class="btn primary big" type="submit">Send reset link</button>
+      </form>
+      <button class="link-btn back-btn" type="button" data-go="signin">Back to sign in</button>
+    </div>
+  </main>
+
+  <main id="screen-newpass" class="screen auth-screen hidden">
+    <div class="login-card glass auth-card">
+      <div class="auth-head"><img src="/icon-192.png" alt="" width="56" height="56"><h1 class="logo small" aria-label="VYRA">VYRA</h1></div>
+      <h2 class="auth-title">Choose a new password</h2>
+      <form id="newpass-form" novalidate>
+        <label class="field"><span>New password</span><input id="newpass-pass" type="password" autocomplete="new-password" minlength="10" maxlength="200" required>
+          <small class="hint">At least 10 characters.</small></label>
+        <p id="newpass-msg" class="form-msg" role="alert"></p>
+        <button class="btn primary big" type="submit">Save password</button>
+      </form>
+    </div>
+  </main>
+
+  <main id="screen-home" class="screen auth-screen hidden">
+    <div class="login-card glass auth-card">
+      <img class="login-mascot" src="/icon-512.png" alt="" width="230" height="230" decoding="async">
+      <h1 class="logo" aria-label="VYRA">VYRA</h1>
+      <p class="tagline">Find Your Somewhere.</p>
+      <div class="home-me"><span id="home-avatar" class="home-av"></span><div><div id="home-name" class="name"></div><div id="home-user" class="sub"></div></div></div>
+      <label id="home-code-field" class="field hidden"><span>Squad code</span><input id="home-code" type="password" maxlength="100" placeholder="Ask whoever invited you"></label>
+      <p id="home-msg" class="form-msg" role="alert"></p>
+      <div class="auth-actions">
+        <button id="home-enter" class="btn primary big" type="button">Enter VYRA</button>
+        <button id="home-edit" class="btn big" type="button">Edit profile</button>
+        <button id="home-signout" class="link-btn" type="button">Sign out</button>
+      </div>
+    </div>
+  </main>
+
+  <main id="screen-profile" class="screen auth-screen hidden">
+    <div class="login-card glass auth-card profile-card">
+      <h2 id="profile-title" class="auth-title">Finish your profile</h2>
+      <form id="profile-form" novalidate>
+        <label class="field"><span>Username</span><input id="pf-username" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="20" placeholder="sir_rages_a_lot">
+          <small class="hint">3 to 20 lowercase letters, numbers or _. Must be unique.</small></label>
+        <label class="field"><span>Display name</span><input id="pf-name" type="text" autocomplete="off" maxlength="30" placeholder="Sir Rages-a-Lot"></label>
+
+        <div class="field">
+          <span>Your picture</span>
+          <div class="seg" role="tablist" aria-label="Picture type">
+            <button id="seg-emoji" type="button" role="tab" aria-selected="true">Emoji</button>
+            <button id="seg-photo" type="button" role="tab" aria-selected="false">Photo</button>
+          </div>
+          <div id="pf-emoji-panel"><div id="pf-avatar-grid" class="avatar-grid"></div></div>
+          <div id="pf-photo-panel" class="hidden">
+            <div class="photo-row">
+              <span id="pf-photo-preview" class="home-av" aria-label="Current picture"></span>
+              <div class="photo-actions">
+                <button id="pf-photo-choose" class="btn" type="button">Choose photo</button>
+                <button id="pf-photo-remove" class="btn" type="button">Remove photo</button>
+              </div>
+            </div>
+            <input id="pf-file" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+            <p class="hint">Photos are <b>public</b>: anyone who can see VYRA can see them. Use JPEG, PNG or WebP. VYRA crops it square, shrinks it, converts it to WebP and removes hidden photo data like location.</p>
+            <p id="pf-photo-msg" class="form-msg" role="status"></p>
+          </div>
+        </div>
+
+        <div class="field"><span>Accent color</span><div id="pf-color-grid" class="color-grid"></div></div>
+        <label class="field"><span>Status</span>
+          <select id="pf-status">
+            <option value="online">Online</option>
+            <option value="idle">Idle</option>
+            <option value="dnd">Do not disturb</option>
+            <option value="invisible">Invisible (hide me from the lobby list)</option>
+          </select></label>
+        <p id="pf-msg" class="form-msg" role="alert"></p>
+        <div class="login-actions pf-actions">
+          <button id="pf-save" class="btn primary big" type="submit">Save</button>
+        </div>
+      </form>
+      <div class="auth-links">
+        <button id="pf-cancel" class="link-btn hidden" type="button">Cancel</button>
+        <button id="pf-signout" class="link-btn" type="button">Sign out</button>
+      </div>
+    </div>
+  </main>
+
+  <div id="crop" class="overlay hidden" role="dialog" aria-modal="true" aria-label="Crop your picture">
+    <div class="card glass crop-card">
+      <h2>Crop your picture</h2>
+      <div class="crop-stage"><canvas id="crop-canvas" width="320" height="320"></canvas><div class="crop-ring" aria-hidden="true"></div></div>
+      <label class="field zoom"><span>Zoom</span><input id="crop-zoom" type="range" min="1" max="4" step="0.01" value="1"></label>
+      <p class="hint center">Drag to move. It will be public.</p>
+      <p id="crop-msg" class="form-msg" role="alert"></p>
+      <div class="crop-actions"><button id="crop-cancel" class="btn" type="button">Cancel</button><button id="crop-ok" class="btn primary" type="button">Use picture</button></div>
+    </div>
+  </div>
+
   <!-- ============ LOBBY ============ -->
   <main id="screen-lobby" class="screen hidden" data-view="rooms">
     <header class="topbar">
@@ -190,6 +352,8 @@
     </div>
   </div>
 
+  <script src="/auth.js"></script>
   <script src="/app.js"></script>
+  <script src="/account.js"></script>
 </body>
 </html>

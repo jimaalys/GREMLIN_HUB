@@ -1,6 +1,6 @@
 {
   "name": "vyra",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "VYRA: Find Your Somewhere. A mobile-first hangout app for friends: voice, screenshare, watch together and a shared feed.",
   "main": "server.js",
   "scripts": {
