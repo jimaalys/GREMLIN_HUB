@@ -1,12 +1,26 @@
-# 👾 Gremlin Den
+# VYRA
 
-A chaotic little hangout app for friends who game, screenshare and doomscroll together.
+**Find Your Somewhere.**
+
+A mobile-first hangout app for friends who game, screenshare and doomscroll together. Open it in any browser, or install it to your phone's home screen like a regular app. (VYRA grew out of an earlier project called Gremlin Den.)
+
+Its mascot is **The Wanderer**, a small hooded shadow creature with glowing lime eyes and a glowing V on its hood.
 
 - **Lobby**: see who's online and what they're playing, post a "squad up" call (it opens a room for you)
 - **Rooms**: voice chat + screenshare (with sound), chat, floating emoji reactions, speaking glow
 - **Watch together**: paste a YouTube link or direct .mp4/.webm and play / pause / seek stay in sync for everyone (late joiners land on the right second)
 - **Scroll**: a shared feed. Drop links, images or hot takes, react live (💀😭🔥), spotlight a post for the whole room, or roll a random chaos prompt
 - **Invite links**: `?room=name` drops friends straight into a room
+
+## Install it as an app
+
+VYRA is a web app that can be installed, so there is no app store.
+
+- **Android (Chrome or Samsung Internet):** open the site, tap **Install** when it appears (or the browser menu, then **Install app** / **Add to Home screen**).
+- **iPhone / iPad:** open the site in **Safari**, tap **Share**, then **Add to Home Screen**.
+- **Computer (Chrome or Edge):** click the install icon at the right end of the address bar.
+
+If the home-screen icon doesn't change after an update, remove the installed app and install it again.
 
 ## Run it
 
@@ -31,21 +45,49 @@ Screenshare and mic only work on **HTTPS** (or localhost), so you can't just sha
 |---|---|
 | `ACCESS_CODE` | A "squad code" friends must type to enter. **Set this if the URL is public**, otherwise anyone who finds it can join. |
 | `PORT` | Port to listen on (default 3000). |
-| `TURN_URL`, `TURN_USER`, `TURN_PASS` | Optional TURN relay for friends behind strict networks (some school/work Wi-Fi, some mobile carriers) where direct connections fail. `TURN_URL` can be comma-separated, e.g. `turn:turn.example.com:3478`. |
+| `TURN_URL` and `TURN_SECRET` | Optional TURN relay for friends behind strict networks (some school/work Wi-Fi, some mobile carriers) where direct connections fail. **Both must be set**, otherwise everyone just uses public STUN servers. `TURN_URL` can be comma-separated, e.g. `turn:turn.example.com:3478`. `TURN_SECRET` is your coturn server's `static-auth-secret` (with `use-auth-secret` turned on). |
+| `TURN_TTL` | Optional. How many seconds a relay credential stays valid (default 43200, which is 12 hours). |
+
+**How relay credentials stay private:** the server never sends the TURN secret to anyone. After someone enters the squad code, it creates a short-lived username and password from the secret and sends only those. The public `/config` page reveals only whether a squad code is needed. There is no setting for a permanent TURN username and password.
 
 ## Good to know
 
 - **Size**: every person connects directly to every other person (mesh), so it's great for a friend group and gets heavy past ~5–6 people sharing video. Rooms are capped at 8.
 - **Screenshare** needs a desktop browser. Phones can join, chat, talk, watch and scroll, but can't share their screen.
 - **Netflix / Disney+ / etc.** block synced playback. Use *Share screen* for those and press play together.
-- **Nothing is saved.** Rooms, chat and feeds live in memory and vanish when the server restarts or a room empties.
+- **Nothing about rooms is saved on the server.** Rooms, chat and feeds live in memory and vanish when the server restarts or a room empties.
+- **Your own settings are saved on your device.** Your name, avatar, color and status are remembered in your browser's local storage (under the keys `gremlin-profile` and `gremlin-status`, which keep their old names on purpose so nobody's settings reset).
 - **YouTube sync** loads YouTube's player, so viewers need to be able to reach youtube.com. Some videos disable embedding and won't load.
 
 ## Files
 
 ```
-server.js    WebSocket server: presence, rooms, WebRTC signaling, watch sync, feed
-index.html   the page
-style.css    the look
-app.js       the client
+server.js                  WebSocket server: presence, rooms, WebRTC signaling, watch sync, feed
+index.html                 the page
+style.css                  the look (VYRA colors, layout, embedded wordmark font)
+app.js                     the client
+manifest.webmanifest       tells phones the app's name, colors and icons
+sw.js                      service worker: lets the app install and open quickly
+icon.svg                   browser tab icon
+icon-192.png, icon-512.png            app icons
+icon-maskable-512.png      Android icon that survives round / squircle cropping
+apple-touch-icon.png       iPhone / iPad home-screen icon
+THIRD_PARTY_LICENSES.md    font and library credits
 ```
+
+`server.js` only serves the files named in its list, so a new file the page needs also has to be added to that list.
+
+## Brand colors
+
+| Name | Hex | Used for |
+|---|---|---|
+| Midnight | `#120D26` | main background |
+| Deep purple | `#261C48` | cards and panels |
+| Purple | `#7C5CFF` | primary accent: buttons, active tabs, your chat bubbles |
+| Lime | `#B6FF3B` | highlights: speaking glow, live mic, The Wanderer's eyes |
+| Pink | `#FF4FA3` | notification dots, sharing state |
+| Cyan | `#36E0FF` | links, focus rings, watch-together panel |
+
+## Credits and licenses
+
+The VYRA wordmark uses the Michroma typeface (SIL Open Font License 1.1). See [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) for the copyright notice and the full license text.

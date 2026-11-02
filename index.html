@@ -3,15 +3,20 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#120d26">
+  <meta name="theme-color" content="#120D26">
   <meta name="color-scheme" content="dark">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="Gremlin Den">
+  <meta name="apple-mobile-web-app-title" content="VYRA">
+  <meta name="application-name" content="VYRA">
+  <meta name="description" content="VYRA: Find Your Somewhere. Hang out with your crew: voice, screenshare, watch together and chat.">
+  <meta property="og:title" content="VYRA: Find Your Somewhere.">
+  <meta property="og:description" content="Hang out with your crew: voice, screenshare, watch together and chat.">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Gremlin Den</title>
+  <title>VYRA: Find Your Somewhere.</title>
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,16 +30,16 @@
   <!-- ============ LOGIN ============ -->
   <main id="screen-login" class="screen">
     <div class="login-card glass">
-      <img class="login-mascot" src="/icon.svg" alt="" width="84" height="84">
-      <h1 class="logo">Gremlin<span>Den</span></h1>
-      <p class="tagline">Where the chaos hangs out.</p>
+      <img class="login-mascot" src="/icon-512.png" alt="The Wanderer, VYRA's hooded mascot with glowing lime eyes" width="230" height="230" decoding="async">
+      <h1 class="logo" aria-label="VYRA">VYRA</h1>
+      <p class="tagline">Find Your Somewhere.</p>
       <form id="login-form" autocomplete="off">
         <label class="field">
           <span>What do we call you?</span>
           <input id="login-name" maxlength="20" placeholder="Sir Rages-a-Lot" required>
         </label>
         <div class="field">
-          <span>Pick your gremlin</span>
+          <span>Pick your avatar</span>
           <div id="avatar-grid" class="avatar-grid"></div>
         </div>
         <div class="field">
@@ -43,9 +48,9 @@
         </div>
         <label id="code-field" class="field hidden">
           <span>Squad code</span>
-          <input id="login-code" type="password" maxlength="100" placeholder="Ask whoever runs the den">
+          <input id="login-code" type="password" maxlength="100" placeholder="Ask whoever invited you">
         </label>
-        <button class="btn primary big" type="submit">Enter the den</button>
+        <div class="login-actions"><button class="btn primary big" type="submit">Enter VYRA</button></div>
       </form>
       <button id="install-btn-login" class="link-btn hidden" type="button">Install the app</button>
       <p id="ios-hint" class="hint center hidden">On iPhone: tap <b>Share</b>, then <b>Add to Home Screen</b> to install.</p>
@@ -55,7 +60,10 @@
   <!-- ============ LOBBY ============ -->
   <main id="screen-lobby" class="screen hidden" data-view="rooms">
     <header class="topbar">
-      <h1 class="logo small">Gremlin<span>Den</span></h1>
+      <div class="brand">
+        <img src="/icon-192.png" alt="" width="36" height="36">
+        <h1 class="logo small" aria-label="VYRA">VYRA</h1>
+      </div>
       <div class="top-actions">
         <button id="install-btn" class="btn soft hidden" type="button">Install</button>
         <div id="me-chip" class="chip me"></div>
@@ -74,7 +82,7 @@
       <section class="card glass" data-section="rooms">
         <h2>Rooms</h2>
         <form id="room-form" class="inline-form">
-          <input id="room-name" maxlength="30" placeholder="New room name">
+          <input id="room-name" maxlength="30" placeholder="Room name">
           <button type="button" id="room-dice" class="btn soft icon" title="Random name" aria-label="Random room name">🎲</button>
           <button class="btn primary" type="submit">Make it</button>
         </form>
@@ -176,7 +184,7 @@
 
   <div id="overlay" class="overlay hidden">
     <div class="card glass">
-      <h2>Lost the den 😵</h2>
+      <h2>Lost the connection 😵</h2>
       <p>The connection dropped.</p>
       <button class="btn primary big" onclick="location.reload()">Reconnect</button>
     </div>

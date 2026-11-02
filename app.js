@@ -1,5 +1,5 @@
 'use strict';
-// Gremlin Den client: lobby, rooms, WebRTC voice + screenshare (mesh),
+// VYRA client: lobby, rooms, WebRTC voice + screenshare (mesh),
 // synced watch-together, and a shared scroll feed.
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -59,6 +59,8 @@ const bubble = (u, extra = '') => el('span', { class: `bubble ${extra}`, style: 
 // =====================================================================
 // LOGIN
 // =====================================================================
+// NOTE: the saved-settings keys below ('gremlin-profile', 'gremlin-status') keep their old names on purpose,
+// so everyone's saved name, avatar, color and status carry over after the rebrand.
 const profile = Object.assign({ name: '', avatar: AVATARS[0], color: COLORS[0] }, store.get('gremlin-profile'));
 
 function buildLogin() {
@@ -79,7 +81,7 @@ function buildLogin() {
   }
   $('#login-form').addEventListener('submit', (e) => {
     e.preventDefault();
-    profile.name = $('#login-name').value.trim() || 'Mystery Gremlin';
+    profile.name = $('#login-name').value.trim() || 'Mystery Wanderer';
     store.set('gremlin-profile', profile);
     connect($('#login-code').value);
   });
@@ -109,6 +111,7 @@ function connect(code) {
 function handle(m) {
   switch (m.t) {
     case 'welcome':
+      if (m.ice) S.config.ice = m.ice;
       S.me = { id: m.id, ...profile };
       renderMe();
       show('lobby');
@@ -221,6 +224,7 @@ function buildLobby() {
 // ROOM
 // =====================================================================
 function enterRoom(m) {
+  if (m.ice) S.config.ice = m.ice; // fresh TURN credentials on every room join
   S.room = m.room;
   S.roomUsers = new Map(m.peers.map((u) => [u.id, u]));
   S.roomUsers.set(S.me.id, S.me);
@@ -750,7 +754,7 @@ function wireInstall() {
     installEvent = e;
     btns.forEach((b) => b.classList.remove('hidden'));
   });
-  window.addEventListener('appinstalled', () => { installEvent = null; btns.forEach((b) => b.classList.add('hidden')); toast('Installed. Find Gremlin Den on your home screen.'); });
+  window.addEventListener('appinstalled', () => { installEvent = null; btns.forEach((b) => b.classList.add('hidden')); toast('Installed. Find VYRA on your home screen.'); });
   for (const b of btns) {
     b.addEventListener('click', async () => {
       if (!installEvent) return;
@@ -771,7 +775,8 @@ if ('serviceWorker' in navigator) {
 async function init() {
   try {
     const res = await fetch('/config');
-    S.config = await res.json();
+    const cfg = await res.json();
+    S.config.needsCode = !!cfg.needsCode; // ICE servers arrive over the socket after login
   } catch { /* defaults are fine */ }
   $('#code-field').classList.toggle('hidden', !S.config.needsCode);
   buildLogin();

@@ -1,7 +1,7 @@
 {
-  "name": "gremlin-den",
+  "name": "vyra",
   "version": "1.0.0",
-  "description": "A chaotic little hangout app for gaming friends: voice, screenshare, watch together, shared scrolling.",
+  "description": "VYRA: Find Your Somewhere. A mobile-first hangout app for friends: voice, screenshare, watch together and a shared feed.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

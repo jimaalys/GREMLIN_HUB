@@ -1,7 +1,9 @@
-// Gremlin Den service worker: makes the app installable and lets the shell
+// VYRA service worker: makes the app installable and lets the shell
 // open instantly. Live stuff (websocket, /config) always goes to the network.
-const CACHE = 'gremlin-den-v1';
-const SHELL = ['/', '/style.css', '/app.js', '/manifest.webmanifest', '/icon.svg', '/icon-192.png'];
+const CACHE = 'vyra-v1'; // new name: the activate step below deletes the old 'gremlin-den-v1' cache
+// Everything the first screen needs, so VYRA opens instantly. (Maskable + Apple icons are fetched by
+// the phone itself at install time, so they are not preloaded here.)
+const SHELL = ['/', '/style.css', '/app.js', '/manifest.webmanifest', '/icon.svg', '/icon-192.png', '/icon-512.png'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
